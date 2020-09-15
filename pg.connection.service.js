@@ -10,7 +10,7 @@ class ConnectionManager {
             host: 'localhost',
             port: 5439,
             user: 'postgres',
-            database:'notebook2'
+            database:'postgres'
         })
         this.client.connect(err => {
             if (err) {
@@ -31,13 +31,3 @@ class ConnectionManager {
 module.exports = {
     ConnectionManager
 }
-
-
-
-
-//
-//
-// module.exports={
-//     login,
-//     selectAll,
-// }
