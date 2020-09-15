@@ -33,13 +33,7 @@ module.exports = {
 }
 
 
-//
-// function selectAll() {
-//     client.query('SELECT * FROM public.EVENT', (err, res) => {
-//         if (err) throw err
-//         console.log(res.rows)
-//     })
-// }
+
 
 //
 //

@@ -1,4 +1,5 @@
 const {ConnectionManager} = require('./pg.connection.service')
+const {EventGetters} = require('./DB/Event/getters')
 
 const express = require('express')
 const app = express()
@@ -13,10 +14,12 @@ app.get('/', (req, res) => {
 })
 
 app.get('/asd', (req, res) => {
-    // pgService.selectAll()
-    // res.send(200)
+    console.log( dbLayer(EventGetters.selectAll) )
+    res.send(200)
 })
 
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`)
 })
+
+const dbLayer = (func) => func(connectionManager.getClient())
