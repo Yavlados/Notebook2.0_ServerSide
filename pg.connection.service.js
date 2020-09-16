@@ -5,20 +5,19 @@ class ConnectionManager {
     constructor(){
     }
 
-    login = ( loginParams ) =>  {
-        this.client = new Client({
-            host: 'localhost',
-            port: 5439,
-            user: 'postgres',
-            database:'postgres'
-        })
-        this.client.connect(err => {
+    login = async ( loginParams ) =>  {
+        this.client = new Client(loginParams)
+        let conState
+        await this.client.connect(err => {
             if (err) {
                 console.error('connection error', err.stack)
+                conState = false
             } else {
                 console.log('connected')
+                conState = true
             }
         })
+        return conState
     }
 
     logout = () => {
