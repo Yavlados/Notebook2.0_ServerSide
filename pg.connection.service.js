@@ -5,19 +5,9 @@ class ConnectionManager {
     constructor(){
     }
 
-    login = async ( loginParams ) =>  {
+    login = async ( loginParams ) => {
         this.client = new Client(loginParams)
-        let conState
-        await this.client.connect(err => {
-            if (err) {
-                console.error('connection error', err.stack)
-                conState = false
-            } else {
-                console.log('connected')
-                conState = true
-            }
-        })
-        return conState
+        return this.client.connect()
     }
 
     logout = () => {
