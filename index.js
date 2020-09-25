@@ -1,10 +1,18 @@
 const {ConnectionManager} = require('./pg.connection.service')
+
+const {stateFlag} = require('./flag.dto')
+
 const {EventGetters} = require('./DB/Event/getters')
+const {PersonGetters} = require('./DB/Person/getters')
+const {TelephoneGetters} = require('./DB/Telephone/getters')
+const {ContactGetters} = require('./DB/Contact/getters')
+
 const Router = require('express-promise-router')
 const cors  = require("cors")
 const asyncHandler = require('express-async-handler')
 const bodyParser = require('body-parser')
 const express = require('express')
+const { PersonSetters } = require('./DB/Person/setters')
 
 const app = express()
 // const router = new Router()
@@ -43,19 +51,47 @@ app.post('/login', asyncHandler(async (req, res) => {
     })
 }))
 
+//-- MainPage requests --//
 app.get('/main/get_all_events',asyncHandler(async (req, res) => {
     dbLayer(EventGetters.selectAll).then( (dbResponce) => {
         const {rows} = dbResponce
         res.send(rows)
-    }).catch( (e) => console.log(e))
+    }).catch( (e) => console.log(`app.get('/main/get_all_events')`,e))
 })
 )
 
-app.get('/qwe', asyncHandler(async (req, res) => {
-    dbLayer(EventGetters.searchById, 1).then( (dbResponce) => {
-        console.log(dbResponce.rows)
-        res.send(dbResponce.rows)
-    }).catch( (e) => console.log(e))
+app.post('/main/get_event_persons',asyncHandler(async (req, res) => {
+    dbLayer(PersonGetters.getEventPersons, req.body.eventId).then( (dbResponce) => {
+        const {rows} = dbResponce
+        res.send(rows)
+    }).catch( (e) => console.log(`app.post('/main/get_event_persons') ERROR`, e))
+})
+)
+
+app.post('/main/get_person_telephones', asyncHandler(async (req, res) => {
+    dbLayer(TelephoneGetters.getPersonTelephones, req.body.personId ).then( (dbResponce) => {
+        const {rows} = dbResponce
+        res.send(rows)
+    }).catch( (e) => console.log(`app.post('/main/get_person_telephones') ERROR`, e))
+})
+)
+
+app.post('/main/get_telephone_contacts', asyncHandler(async (req, res) => {
+    dbLayer(ContactGetters.getTelephoneContacts, req.body.telephoneId )
+    .then( (dbResponce) => {
+        const {rows} = dbResponce
+        res.send(rows)
+    }).catch( (e) => console.log(`app.post('/main/get_telephone_contacts') ERROR`, e))
+})
+)
+//new
+app.post('/main/set_update_person', asyncHandler(async (req, res) => {
+    dbLayer(PersonSetters.setPersonData, req.body.person)
+    // dbLayer(ContactGetters.getTelephoneContacts, req.body.telephoneId )
+    // .then( (dbResponce) => {
+    //     const {rows} = dbResponce
+    //     res.send(rows)
+    // }).catch( (e) => console.log(`app.post('/main/get_telephone_contacts') ERROR`, e))
 })
 )
 
