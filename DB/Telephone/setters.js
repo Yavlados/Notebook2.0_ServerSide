@@ -3,11 +3,9 @@ const { ContactSetters } = require('../Contact/setters')
 
 class TelephoneSetters {
     static setTelephoneData(client, telephone, personId){
-       
-
         switch(telephone.state){
             case stateFlag.isAdded:
-                this.setInsertTelephone(client, telephone, personId)
+                TelephoneSetters.setInsertTelephone(client, telephone, personId)
                 .then(dbResponce => {
                     const newId = dbResponce.rows[0].id
                     telephone.contacts.map( contact => {
@@ -24,12 +22,21 @@ class TelephoneSetters {
                 telephone.contacts.map( contact => {
                     ContactSetters.setContactData(client, contact, telephone.id)
                 })
+                TelephoneSetters.setUpdateTelephone(client, telephone)
+                .then( dbResponce =>
+                    true
+                   )
                 break
         }
     }
 
-    static setUpdateTelephone(){
-
+    static setUpdateTelephone(client, telephone){
+        return client.query(`
+        UPDATE notebook2.telephone
+        SET number = '${telephone.number}',
+        oldnum = ${telephone.oldnum},
+        internum= ${telephone.internum}
+        WHERE id = ${telephone.id}`)
     }
 
     static setInsertTelephone(client, telephone, personId){

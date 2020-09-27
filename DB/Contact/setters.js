@@ -4,21 +4,30 @@ class ContactSetters {
     static setContactData(client, contact, telephoneId){
         switch(contact.state){
             case stateFlag.isAdded:
-                this.setInsertContact(client, contact, telephoneId)
+                ContactSetters.setInsertContact(client, contact, telephoneId)
                 .then( dbResponce => 
-                    console.log(dbResponce)
+                     true
                     )
                 break
             case stateFlag.isReaded:
                 break
             case stateFlag.isUpdated:
-                setUpdateContact(client, contact, telephoneId)
+                ContactSetters.setUpdateContact(client, contact)
+                .then( dbResponce => 
+                    true
+                   )
                 break
         }
     }
 
-    static setUpdateContact(client, contact, telephoneId){
-
+    static setUpdateContact(client, contact){
+        return client.query(`
+        UPDATE notebook2.contact
+        SET number = '${contact.number}',
+        alias='${contact.alias}',
+        oldnum = ${contact.oldnum},
+        internum= ${contact.internum}
+        WHERE id = ${contact.id}`)
     }
 
     static setInsertContact(client, contact, telephoneId){
