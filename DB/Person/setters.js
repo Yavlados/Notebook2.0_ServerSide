@@ -7,31 +7,36 @@ const {
 
 class PersonSetters {
     static setPersonData(client, person) {
-        switch (person.state) {
-            case stateFlag.isAdded:
-                PersonSetters.setInsertPerson(client, person)
-                    .then(dbResponce => {
-                        const newId = dbResponce.rows[0].id
-                        person.telephones.map(telephone => {
-                            TelephoneSetters.setTelephoneData(client, telephone, newId)
+        return new Promise( (resolve, reject) => {
+            switch (person.state) {
+                case stateFlag.isAdded:
+                    PersonSetters.setInsertPerson(client, person)
+                        .then(dbResponce => {
+                            const newId = dbResponce.rows[0].id
+                            person.telephones.map(telephone => {
+                                TelephoneSetters.setTelephoneData(client, telephone, newId)
+                            })
+                            resolve(newId)
                         })
+                    break
+                case stateFlag.isReaded:
+                    person.telephones.map(telephone => {
+                        TelephoneSetters.setTelephoneData(client, telephone, person.id)
                     })
-                break
-            case stateFlag.isReaded:
-                person.telephones.map(telephone => {
-                    TelephoneSetters.setTelephoneData(client, telephone, person.id)
-                })
-                break
-            case stateFlag.isUpdated:
-                person.telephones.map(telephone => {
-                    TelephoneSetters.setTelephoneData(client, telephone, person.id)
-                })
-                PersonSetters.setUpdatePerson(client, person)
-                    .then(dbResponce =>
-                        true
-                    )
-                break
-        }
+                    resolve(person.id)
+                    break
+                case stateFlag.isUpdated:
+                    person.telephones.map(telephone => {
+                        TelephoneSetters.setTelephoneData(client, telephone, person.id)
+                    })
+                    PersonSetters.setUpdatePerson(client, person)
+                        .then(dbResponce =>
+                            true
+                        )
+                    resolve(person.id)
+                    break
+            }
+        } )
     }
 
     static setInsertPerson(client, person) {
@@ -49,6 +54,21 @@ class PersonSetters {
         midname= '${person.midname}',
         alias = '${person.alias}'
         WHERE id = ${person.id}`)
+    }
+
+    static setRemovePersons(client, personsIds){
+        let query = `DELETE
+        FROM notebook2.person
+        WHERE id IN (`
+        personsIds.map((row, index) => {
+            if (index === 0)
+                query += `${row.person_id}`
+            else
+                query += `,${row.person_id}`
+        })
+        query += ')'
+        client.query(query)
+        .then( _ => true)
     }
 }
 module.exports = {
