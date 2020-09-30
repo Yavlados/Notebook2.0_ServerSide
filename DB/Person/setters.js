@@ -35,6 +35,12 @@ class PersonSetters {
                         )
                     resolve(person.id)
                     break
+                case stateFlag.isRemoved: 
+                    PersonSetters.setRemovePerson(client, person)
+                    .then(dbResponce => {
+                        true
+                    })
+                break
             }
         } )
     }
@@ -69,6 +75,13 @@ class PersonSetters {
         query += ')'
         client.query(query)
         .then( _ => true)
+    }
+
+    static setRemovePerson(client, person) {
+        return client.query(`
+        DELETE 
+        FROM notebook2.person
+        WHERE id=${person.id}`)
     }
 }
 module.exports = {

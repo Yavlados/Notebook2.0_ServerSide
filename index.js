@@ -97,11 +97,9 @@ router.post('/get_event_persons', asyncHandler(async (req, res) => {
 }))
 
 router.post('/get_person_telephones', asyncHandler(async (req, res) => {
-    dbLayer(TelephoneGetters.getPersonTelephones, req.body.personId).then((dbResponce) => {
-        const {
-            rows
-        } = dbResponce
-        res.send(rows)
+    dbLayer(TelephoneGetters.getPersonTelephones, req.body.personId)
+    .then((telephones) => {
+        res.send(telephones)
     }).catch((e) => console.log(`app.post('/main/get_person_telephones') ERROR`, e))
 }))
 
@@ -114,7 +112,7 @@ router.post('/get_telephone_contacts', asyncHandler(async (req, res) => {
             res.send(rows)
         }).catch((e) => console.log(`app.post('/main/get_telephone_contacts') ERROR`, e))
 }))
-//new
+
 router.post('/set_update_person', asyncHandler(async (req, res) => {
     dbLayer(PersonSetters.setPersonData, req.body.person)
 }))
@@ -132,6 +130,15 @@ router.post('/set_remove_event', asyncHandler(async (req, res) => {
             res.send(responce)
         })
 }))
+
+router.post('/set_update_event', asyncHandler(async (req, res) => {
+    dbLayer(EventSetters.setEventData, req.body.event)
+    .then(responce => {
+        res.send(responce)
+    })
+}))
+
+//EXPRESS CONFIG
 app.use('/api', router)
 app.use('/api', function (error, req, res, next) {
     res.status(statusCode).json({

@@ -33,7 +33,13 @@ class EventSetters {
 
                     break
                 case stateFlag.isUpdated:
-
+                    EventSetters.setUpdateEvent(client, event)
+                        .then(dbResponce => {
+                            EventSetters.setLinksEventPerson(client, event.id, linkedPersonsId)
+                                .then(debResp =>
+                                    resolve(true)
+                                )
+                        })
                     break
             }
         })
@@ -47,24 +53,27 @@ class EventSetters {
                         rows
                     } = dbResponce
                     if (rows.length !== 0) {
-                       PersonSetters.setRemovePersons(client, rows)
+                        PersonSetters.setRemovePersons(client, rows)
                     }
                     client.query(`DELETE
                         FROM notebook2.event
                         WHERE id=${event.id}`)
-                                .then(_ => resolve(true))
+                        .then(_ => resolve(true))
                 })
         })
     }
 
     static setUpdateEvent(client, event) {
         return client.query(`
-        UPDATE notebook2.contact
-        SET number = '${contact.number}',
-        alias='${contact.alias}',
-        oldnum = ${contact.oldnum},
-        internum= ${contact.internum}
-        WHERE id = ${contact.id}`)
+        UPDATE notebook2.event
+        SET 
+        detention_date = '${event.detention_date}', 
+        detention_time = '${event.detention_time}', 
+        detention_reason = '${event.detention_reason}',
+        detention_by = '${event.detention_by}', 
+        keeping_place = '${event.keeping_place}', 
+        additional = '${event.additional}'
+        WHERE id = ${event.id}`)
     }
 
     static setInsertEvent(client, event) {

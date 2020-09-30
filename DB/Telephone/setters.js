@@ -27,6 +27,12 @@ class TelephoneSetters {
                     true
                    )
                 break
+            case stateFlag.isRemoved:
+                    TelephoneSetters.setRemoveTelephone(client, telephone)
+                    .then(dbResponce => {
+                        true
+                    })
+                break
         }
     }
 
@@ -46,6 +52,12 @@ class TelephoneSetters {
         RETURNING id`)
     }
 
+    static setRemoveTelephone(client, telephone) {
+        return client.query(`
+        DELETE 
+        FROM notebook2.telephone
+        WHERE id=${telephone.id}`)
+    }
 }
 module.exports = {
     TelephoneSetters

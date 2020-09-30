@@ -17,6 +17,12 @@ class ContactSetters {
                     true
                    )
                 break
+            case stateFlag.isRemoved:
+                ContactSetters.setRemoveContact(client, contact)
+                .then(dbResponce => {
+                    true
+                })
+            break
         }
     }
 
@@ -34,6 +40,13 @@ class ContactSetters {
         return client.query(`
         INSERT INTO notebook2.contact (number, alias, oldnum, internum, telephone_id)
         VALUES ('${contact.number}', '${contact.alias}', ${contact.oldnum}, ${contact.internum}, ${telephoneId})`)
+    }
+
+    static setRemoveContact(client, contact){
+        return client.query(`
+        DELETE 
+        FROM notebook2.contact
+        WHERE id=${contact.id}`)
     }
 
 }
