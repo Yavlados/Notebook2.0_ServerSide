@@ -2,6 +2,8 @@ const {
     ConnectionManager
 } = require('./pg.connection.service')
 
+const {CryptoManager} = require('./Crypto/cryptoManager')
+
 const {
     EventGetters
 } = require('./DB/Event/getters')
@@ -59,6 +61,7 @@ app.use(express.static(path.resolve(__dirname, 'node_modules')))
 app.use(express.static(path.resolve(__dirname, 'dist', 'AngularApp')))
 
 let connectionManager
+let cryptoManager
 
 router.post('/login', asyncHandler(async (req, res) => {
     connectionManager = new ConnectionManager()
@@ -69,10 +72,16 @@ router.post('/login', asyncHandler(async (req, res) => {
                 msg: 'Login error'
             })
         else {
-            res.status(200).send({
-                isLogged: true,
-                msg: 'You are logged in'
+            cryptoManager = new CryptoManager()
+            cryptoManager.generateKey( connectionManager.getClient() )
+            .then( resolved => {
+                res.status(200).send({
+                    isLogged: true,
+                    msg: 'You are logged in',
+                    uuid: resolved
+                })
             })
+            
         }
     })
 }))
@@ -83,65 +92,81 @@ router.get('/get_all_events', asyncHandler(async (req, res) => {
         const {
             rows
         } = dbResponce
-        res.send(rows)
-    }).catch((e) => console.log(`app.get('/main/get_all_events')`, e))
+        res.send( cryptoManager.encode({rows}) )
+    }).catch((e) => console.log(`app.get('/get_all_events') ERROR`, e))
 }))
 
 router.post('/get_event_persons', asyncHandler(async (req, res) => {
-    dbLayer(PersonGetters.getEventPersons, req.body.eventId).then((dbResponce) => {
+    dbLayer(PersonGetters.getEventPersons, cryptoManager.decode(req.body).eventId).then((dbResponce) => {
         const {
             rows
         } = dbResponce
-        res.send(rows)
-    }).catch((e) => console.log(`app.post('/main/get_event_persons') ERROR`, e))
+        res.send( cryptoManager.encode({rows}) )
+    }).catch((e) => console.log(`app.post('/get_event_persons') ERROR`, e))
 }))
 
 router.post('/get_person_telephones', asyncHandler(async (req, res) => {
-    dbLayer(TelephoneGetters.getPersonTelephones, req.body.personId)
-    .then((telephones) => {
-        res.send(telephones)
-    }).catch((e) => console.log(`app.post('/main/get_person_telephones') ERROR`, e))
+    dbLayer(TelephoneGetters.getPersonTelephones, cryptoManager.decode(req.body).personId)
+    .then((rows) => {
+        res.send( cryptoManager.encode({rows}) )
+    }).catch((e) => console.log(`app.post('/get_person_telephones') ERROR`, e))
 }))
 
 router.post('/get_telephone_contacts', asyncHandler(async (req, res) => {
-    dbLayer(ContactGetters.getTelephoneContacts, req.body.telephoneId)
+    dbLayer(ContactGetters.getTelephoneContacts, cryptoManager.decode(req.body).telephoneId)
         .then((dbResponce) => {
             const {
                 rows
             } = dbResponce
-            res.send(rows)
-        }).catch((e) => console.log(`app.post('/main/get_telephone_contacts') ERROR`, e))
+            res.send( cryptoManager.encode({rows}) )
+        }).catch((e) => console.log(`app.post('/get_telephone_contacts') ERROR`, e))
 }))
 
 router.post('/set_update_person', asyncHandler(async (req, res) => {
-    dbLayer(PersonSetters.setPersonData, req.body.person)
+    dbLayer(PersonSetters.setPersonData,  cryptoManager.decode(req.body).person)
 }))
 
 router.post('/set_add_event', asyncHandler(async (req, res) => {
-    dbLayer(EventSetters.setEventData, req.body.event)
+    dbLayer(EventSetters.setEventData, cryptoManager.decode(req.body).event)
         .then(responce => {
-            res.send(responce)
+            res.send(cryptoManager.encode( {responce}) )
         })
+        .catch((e) => console.log(`app.post('/set_add_event') ERROR`, e))
 }))
 
 router.post('/set_remove_event', asyncHandler(async (req, res) => {
-    dbLayer(EventSetters.setRemoveEvent, req.body.event)
+    dbLayer(EventSetters.setRemoveEvent, cryptoManager.decode(req.body).event)
         .then(responce => {
-            res.send(responce)
-        })
+            res.send(cryptoManager.encode( {responce}) )   
+    })
+    .catch((e) => console.log(`app.post('/set_remove_event') ERROR`, e))
 }))
 
 router.post('/set_update_event', asyncHandler(async (req, res) => {
-    dbLayer(EventSetters.setEventData, req.body.event)
+    dbLayer(EventSetters.setEventData, cryptoManager.decode(req.body).event)
     .then(responce => {
-        res.send(responce)
+        res.send(cryptoManager.encode( {responce}) )   
     })
+    .catch((e) => console.log(`app.post('/set_update_event') ERROR`, e))
+}))
+//////
+router.post('/crypto_service', asyncHandler(async (req, res) => {
+    cryptoManager.handleRequest(req.body.code, connectionManager.getClient())
+    .then( resolved => 
+        res.send(cryptoManager.encode( {resolved}) )      
+    )
+}))
+
+
+/////////////////////////////////////
+router.post('/import_events', asyncHandler(async (req, res) => {
+    console.log( cryptoManager.decode(req.body).importData )
 }))
 
 //EXPRESS CONFIG
 app.use('/api', router)
 app.use('/api', function (error, req, res, next) {
-    res.status(statusCode).json({
+    res.status(200).json({
         error
     });
 });
