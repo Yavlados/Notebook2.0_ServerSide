@@ -1,8 +1,14 @@
 const aesjs = require('aes-js')
 const { statusCode } = require('../crypto.codes')
 
+const { EventGetters } = require('../DB/Event/getters')
+const { PersonGetters } = require('../DB/Person/getters')
+const { TelephoneGetters } = require('../DB/Telephone/getters')
+
 class CryptoManager {
     aes
+    defaultPassword = 'eab88efa463a5820'
+
     constructor() {
     }
 
@@ -18,26 +24,19 @@ class CryptoManager {
         })
     }
 
-    handleRequest(requestFromClient, client) {
-        return new Promise((resolve, reject) => {
-            switch (requestFromClient) {
-                case statusCode.keyIsUpdated:
-                    break
-                case statusCode.updateKey:
-                    this.generateKey(client)
-                        .then(uuid => resolve({ uuid }))
-                    break
-
-            }
-        })
-    }
-
     setKey(uuid) {
         const slicedKey = uuid.slice(3, 8) + uuid.slice(24, -1)
         this.aes = new aesjs.AES(this.passwordToArrayHandler(slicedKey))   //Have setted key to encoder
     }
 
     encode(data, password = undefined) {
+
+        let aesLocal
+        if (!!password) {
+            aesLocal = new aesjs.AES(this.passwordToArrayHandler(password))   //Have setted key to encoder
+        } else
+            aesLocal = this.aes
+
         const data_string = JSON.stringify(data)
         let data_array = Array.from(aesjs.utils.utf8.toBytes(data_string))
 
@@ -45,7 +44,7 @@ class CryptoManager {
         let encoding_Result = []
         for (let i = 1; i <= (data_array.length / 16); i++) {
             const batch = data_array.slice(((i - 1) * 16), (i * 16))
-            const encryptedBytes = this.aes.encrypt(batch)
+            const encryptedBytes = aesLocal.encrypt(batch)
             encoding_Result = encoding_Result.concat([...encryptedBytes])
         }
         return encoding_Result
@@ -93,6 +92,75 @@ class CryptoManager {
         const password_array = new Uint8Array(16)
         encoder.encodeInto(password, password_array)
         return password_array
+    }
+
+    handleRequest(requestFromClient, client) {
+        return new Promise((resolve, reject) => {
+            switch (requestFromClient) {
+                case statusCode.keyIsUpdated:
+                    break
+                case statusCode.updateKey:
+                    this.generateKey(client)
+                        .then(uuid => resolve({ uuid }))
+                    break
+
+            }
+        })
+    }
+
+    importManager(data, client) {
+        return new Promise((resolve, reject) => {
+            const { onImport, password } = data
+            if (typeof onImport === 'string' &&
+                onImport === 'ALL') {
+                this.prepareImportAll(client)
+                    .then(data => {
+                        if (!!password.trim())
+                            resolve({
+                                data: this.encode(data, password),
+                                isSecured: true
+                            })
+                        else
+                            resolve({
+                                data: this.encode(data, this.defaultPassword),
+                                isSecured: false
+                            })
+                    })
+            }
+        })
+
+    }
+
+    prepareImportAll(client) {
+        return new Promise((resolve, reject) => {
+            EventGetters.selectAll(client)
+                .then(eventResponce => {
+                    let events = eventResponce.rows
+                    events.map((_, evind) => {
+
+                        PersonGetters.getEventPersons(client, events[evind].id)
+                            .then(personResponce => {
+                                let persons = personResponce.rows
+                                events[evind].persons = persons
+                                persons.map((_, persind) => {
+                                    persons[persind].telephones = []
+                                    TelephoneGetters.getPersonTelephones(client, persons[persind].id)
+                                        .then(telephones => {
+                                            persons[persind].telephones = telephones
+                                            if (persind === persons.length - 1 &&
+                                                evind === events.length - 1) {
+                                                resolve(events)
+                                            }
+                                        })
+                                })
+                            })
+                    })
+                })
+        })
+    }
+
+    prepareImportData(eventIds) {
+
     }
 }
 

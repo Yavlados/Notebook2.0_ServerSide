@@ -160,7 +160,15 @@ router.post('/crypto_service', asyncHandler(async (req, res) => {
 
 /////////////////////////////////////
 router.post('/import_events', asyncHandler(async (req, res) => {
-    console.log( cryptoManager.decode(req.body).importData )
+    cryptoManager.importManager(
+        cryptoManager.decode(req.body).importData,
+        connectionManager.getClient()
+        )
+    .then( (encodedData) => {
+        res.set('Access-Control-Allow-Origin', '*');
+        res.set('Access-Control-Allow-Headers', 'Content-Type');
+        res.send(encodedData)
+    })
 }))
 
 //EXPRESS CONFIG

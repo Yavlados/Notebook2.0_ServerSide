@@ -1,5 +1,5 @@
 class EventGetters {
-    static selectAll(client, _=undefined){
+    static selectAll(client){
         return client.query('SELECT * FROM notebook2.event')
     }
 
