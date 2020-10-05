@@ -171,6 +171,14 @@ router.post('/import_events', asyncHandler(async (req, res) => {
     })
 }))
 
+router.post('/export_events', asyncHandler(async (req, res) => {
+    cryptoManager.exportManager(
+        req.body.exportData,
+        connectionManager.getClient()
+        )
+        .then( responce => res.send(responce))
+}))
+
 //EXPRESS CONFIG
 app.use('/api', router)
 app.use('/api', function (error, req, res, next) {

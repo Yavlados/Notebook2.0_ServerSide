@@ -2,8 +2,11 @@ const aesjs = require('aes-js')
 const { statusCode } = require('../crypto.codes')
 
 const { EventGetters } = require('../DB/Event/getters')
+const { EventSetters } = require('../DB/Event/setters')
+
 const { PersonGetters } = require('../DB/Person/getters')
 const { TelephoneGetters } = require('../DB/Telephone/getters')
+const { stateFlag } = require('../flag.dto')
 
 class CryptoManager {
     aes
@@ -62,13 +65,18 @@ class CryptoManager {
             return true
         }
 
+        let localAes
         data = this.arraySizeHandler(data)
+        if( !! password ){
+         localAes = new aesjs.AES(this.passwordToArrayHandler(password))
+        } else 
+         localAes = this.aes 
 
-        if (isPasswordRight(data, this.aes)) {
+        if (isPasswordRight(data, localAes)) {
             let decodingResult = []
             for (let i = 1; i <= (data.length / 16); i++) {
                 const batch = data.slice(((i - 1) * 16), (i * 16))
-                const encryptedBytes = this.aes.decrypt(batch)
+                const encryptedBytes = localAes.decrypt(batch)
                 decodingResult = decodingResult.concat([...encryptedBytes])
             }
             let strResult = (aesjs.utils.utf8.fromBytes(decodingResult)).replace(/\0/g, '')
@@ -129,6 +137,30 @@ class CryptoManager {
             }
         })
 
+    }
+
+    exportManager(exportData, client) {
+        return new Promise( (resolve, reject) => {
+            const {data, password} = exportData
+            let dataFromFile = this.decode(data, password )
+            dataFromFile.map( (event, eventId) => {
+                event.state = stateFlag.isAdded
+                event.persons.map( person => {
+                    person.state = stateFlag.isAdded
+                    person.telephones.map( telephone => {
+                        telephone.state = stateFlag.isAdded
+                        telephone.contacts.map( contact => {
+                            contact.state = stateFlag.isAdded
+                        })
+                    })
+                })
+                EventSetters.setEventData(client, event)
+                .then( (result) => {
+                    if(eventId === dataFromFile.length-1)
+                        resolve(result)
+                })
+            })
+        })      
     }
 
     prepareImportAll(client) {
