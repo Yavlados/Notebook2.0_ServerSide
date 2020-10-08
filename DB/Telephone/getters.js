@@ -1,39 +1,59 @@
-const { ContactGetters } = require('../Contact/getters')
+const { ContactGetters } = require("../Contact/getters")
+const { PersonGetters } = require("../Person/getters")
 
 class TelephoneGetters {
-    static getPersonTelephones(client, id) {
-        return new Promise( (resolve, reject) => {
-            client.query(`
+  static getPersonTelephones(client, id) {
+    return new Promise((resolve, reject) => {
+      client
+        .query(
+          `
             SELECT *
             FROM notebook2.telephone
-            WHERE person_id = ${id}`)
-            .then( dbResponce => {
-                const {
-                    rows
-                } = dbResponce
-                TelephoneGetters.getTelephoneContacts(client, rows)
-                .then( telephones => resolve(telephones) )
-            })
+            WHERE person_id = ${id}`
+        )
+        .then((dbResponce) => {
+          const { rows } = dbResponce
+          TelephoneGetters.getTelephoneContacts(
+            client,
+            rows
+          ).then((telephones) => resolve(telephones))
         })
-    }
+    })
+  }
 
-    static getTelephoneContacts(client, telephones){
-        return new Promise( (resolve, reject) => {
-            telephones.map( (telephone, index) => {
-                ContactGetters.getTelephoneContacts(client, telephone.id)
-                .then( dbRes => {
-                    const {
-                        rows
-                    } = dbRes
-                    telephone.contacts = rows
-                    if(index === telephones.length-1)
-                        resolve(telephones)
-                })
-            })
+  static getTelephoneContacts(client, telephones) {
+    return new Promise((resolve, reject) => {
+      telephones.map((telephone, index) => {
+        ContactGetters.getTelephoneContacts(client, telephone.id).then(
+          (dbRes) => {
+            const { rows } = dbRes
+            telephone.contacts = rows
+            if (index === telephones.length - 1) resolve(telephones)
+          }
+        )
+      })
+    })
+  }
+
+  static getPersonIds(client, telephoneIds) {
+    return new Promise((resolve, reject) => {
+      client
+        .query(
+          `
+          SELECT DISTINCT person_id
+          FROM notebook2.telephone
+          WHERE id in (${telephoneIds.join(",")})`
+        )
+        .then((dbResponce) => {
+          const personIds = dbResponce.rows.map((person) => person.person_id)
+          PersonGetters.getEventIds(client, personIds).then((events) =>
+            resolve(events)
+          )
         })
-    }
-
+    })
+  }
 }
+
 module.exports = {
-    TelephoneGetters
+  TelephoneGetters,
 }
