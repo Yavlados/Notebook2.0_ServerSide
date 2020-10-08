@@ -23,15 +23,20 @@ class TelephoneGetters {
 
   static getTelephoneContacts(client, telephones) {
     return new Promise((resolve, reject) => {
-      telephones.map((telephone, index) => {
-        ContactGetters.getTelephoneContacts(client, telephone.id).then(
-          (dbRes) => {
-            const { rows } = dbRes
-            telephone.contacts = rows
-            if (index === telephones.length - 1) resolve(telephones)
-          }
-        )
+      const telPrms = telephones.map((telephone, index) => {
+        return new Promise((resTel, rejTel) => {
+          ContactGetters.getTelephoneContacts(client, telephone.id).then(
+            (dbRes) => {
+              const { rows } = dbRes
+              let contacts = rows
+              telephone.contacts = contacts
+              resTel(telephone)
+            }
+          )
+        })
       })
+
+      Promise.all(telPrms).then((telephones) => resolve(telephones))
     })
   }
 
