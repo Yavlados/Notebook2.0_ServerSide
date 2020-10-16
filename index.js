@@ -138,6 +138,10 @@ router.post(
   "/set_update_person",
   asyncHandler(async (req, res) => {
     dbLayer(PersonSetters.setPersonData, cryptoManager.decode(req.body).person)
+      .then((responce) => {
+        res.send(cryptoManager.encode({ responce }))
+      })
+      .catch((e) => console.log(`app.post('/set_update_person') ERROR`, e))
   })
 )
 
@@ -214,9 +218,8 @@ router.post(
     SearchManager.searchInDB(
       connectionManager.getClient(),
       cryptoManager.decode(req.body.search)
-    ).then((responce) => {
-      console.log(responce)
-      res.send(responce)
+    ).then((rows) => {
+      res.send(cryptoManager.encode({ rows }))
     })
   })
 )

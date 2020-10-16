@@ -31,6 +31,18 @@ class SearchManager {
         SearchManager.searchFromPerson(client, person).then((events) =>
           resolve(events)
         )
+      else if (
+        !!event.category.trim() ||
+        !!event.detention_by.trim() ||
+        !!event.detention_date.trim() ||
+        !!event.detention_reason.trim() ||
+        !!event.detention_time.trim() ||
+        !!event.keeping_place.trim() ||
+        !!event.additional.trim()
+      )
+        SearchManager.searchFromEvent(client, event).then((events) =>
+          resolve(events)
+        )
     })
   }
 
@@ -39,13 +51,14 @@ class SearchManager {
       let query = `SELECT DISTINCT telephone_id 
         FROM notebook2.contact WHERE`
       let contactSQLBody = ""
+
       if (!!contactData.number.trim())
         contactSQLBody += ` number ='${contactData.number}'`
 
       if (!!contactData.alias.trim()) {
         if (contactSQLBody.length !== 0) contactSQLBody += ` AND `
 
-        contactSQLBody += ` alias='${contactData.alias}'`
+        contactSQLBody += ` LOWER(alias) LIKE LOWER('${contactData.alias}')`
       }
 
       if (contactSQLBody.length !== 0) {
@@ -98,24 +111,24 @@ class SearchManager {
 
       let personSQLBody = ""
       if (!!personData.name.trim())
-        personSQLBody += ` name ='${personData.name}'`
+        personSQLBody += ` LOWER(name) LIKE LOWER('${personData.name}')`
 
       if (!!personData.lastname.trim()) {
         if (personSQLBody.length !== 0) personSQLBody += ` AND `
 
-        personSQLBody += ` lastname='${personData.lastname}'`
+        personSQLBody += ` LOWER(lastname) LIKE LOWER('${personData.lastname}')`
       }
 
       if (!!personData.midname.trim()) {
         if (personSQLBody.length !== 0) personSQLBody += ` AND `
 
-        personSQLBody += ` midname='${personData.midname}'`
+        personSQLBody += ` LOWER(midname) LIKE LOWER('${personData.midname}')`
       }
 
       if (!!personData.alias.trim()) {
         if (personSQLBody.length !== 0) personSQLBody += ` AND `
 
-        personSQLBody += ` alias='${personData.alias}'`
+        personSQLBody += ` LOWER(alias) LIKE LOWER('${personData.alias}')`
       }
 
       if (personSQLBody.length !== 0) {
@@ -128,6 +141,63 @@ class SearchManager {
             PersonGetters.getEventIds(client, personIds).then((events) =>
               resolve(events)
             )
+          }
+        })
+      } else resolve({ type: searchResponceTypes.empty })
+    })
+  }
+
+  static searchFromEvent(client, event) {
+    return new Promise((resolve, reject) => {
+      let query = `SELECT DISTINCT * 
+        FROM notebook2.event WHERE`
+
+      let eventSQLBody = ""
+      if (!!event.category.trim())
+        eventSQLBody += ` LOWER(category) LIKE LOWER('${event.category}')`
+
+      if (!!event.detention_by.trim()) {
+        if (eventSQLBody.length !== 0) eventSQLBody += ` AND `
+
+        eventSQLBody += ` LOWER(detention_by) LIKE LOWER('${event.detention_by}')`
+      }
+
+      if (!!event.detention_date.trim()) {
+        if (eventSQLBody.length !== 0) eventSQLBody += ` AND `
+
+        eventSQLBody += ` LOWER(detention_date) LIKE LOWER('${event.detention_date}')`
+      }
+
+      if (!!event.detention_reason.trim()) {
+        if (eventSQLBody.length !== 0) eventSQLBody += ` AND `
+
+        eventSQLBody += ` LOWER(detention_reason) LIKE LOWER('${event.detention_reason}')`
+      }
+
+      if (!!event.detention_time.trim()) {
+        if (eventSQLBody.length !== 0) eventSQLBody += ` AND `
+
+        eventSQLBody += ` LOWER(detention_reason) LIKE LOWER('${event.detention_time}')`
+      }
+
+      if (!!event.keeping_place.trim()) {
+        if (eventSQLBody.length !== 0) eventSQLBody += ` AND `
+
+        eventSQLBody += ` LOWER(keeping_place) LIKE LOWER('${event.keeping_place}')`
+      }
+
+      if (!!event.additional.trim()) {
+        if (eventSQLBody.length !== 0) eventSQLBody += ` AND `
+
+        eventSQLBody += ` LOWER(additional) LIKE LOWER('${event.additional}')`
+      }
+
+      if (eventSQLBody.length !== 0) {
+        client.query(query + eventSQLBody).then((dbResponce) => {
+          let events = dbResponce.rows
+          if (events.length === 0) resolve({ type: searchResponceTypes.empty })
+          else {
+            resolve(events)
           }
         })
       } else resolve({ type: searchResponceTypes.empty })

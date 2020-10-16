@@ -42,7 +42,7 @@ class PersonSetters {
   static setInsertPerson(client, person) {
     return client.query(`
         INSERT INTO notebook2.person (lastname, name, midname, alias)
-        VALUES ('${person.name}','${person.lastname}', '${person.midname}','${person.alias}')
+        VALUES ('${person.lastname}','${person.name}', '${person.midname}','${person.alias}')
         RETURNING id`)
   }
 
