@@ -188,7 +188,6 @@ class CryptoManager {
                   })
                 })
                 Promise.all(personPrms).then((persons) => {
-                  console.log(persons)
                   events[evind].persons = persons
                   resEv(events[evind])
                 })
@@ -197,7 +196,6 @@ class CryptoManager {
           })
         })
         Promise.all(eventPrms).then((events) => {
-          console.log(events)
           resolve(events)
         })
       })

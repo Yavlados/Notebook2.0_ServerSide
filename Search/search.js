@@ -46,18 +46,27 @@ class SearchManager {
     })
   }
 
+  static handleSearchString(str){
+    str = str.replace('?', '_')
+    str = str.replace('*', '%')
+    return str
+  }
+
   static searchFromContact(client, contactData) {
     return new Promise((resolve, reject) => {
       let query = `SELECT DISTINCT telephone_id 
         FROM notebook2.contact WHERE`
       let contactSQLBody = ""
 
-      if (!!contactData.number.trim())
+      if (!!contactData.number.trim()) {
+        contactData.number = SearchManager.handleSearchString(contactData.number)
         contactSQLBody += ` number ='${contactData.number}'`
+      }
 
       if (!!contactData.alias.trim()) {
         if (contactSQLBody.length !== 0) contactSQLBody += ` AND `
 
+        contactData.alias = SearchManager.handleSearchString(contactData.alias)
         contactSQLBody += ` LOWER(alias) LIKE LOWER('${contactData.alias}')`
       }
 
@@ -86,7 +95,10 @@ class SearchManager {
 
       let telephoneSQLBody = ""
       if (!!telephoneData.number.trim())
+      {  
+        telephoneData.number = SearchManager.handleSearchString(telephoneData.number)
         telephoneSQLBody += ` number ='${telephoneData.number}'`
+      }
 
       if (telephoneSQLBody.length !== 0) {
         client.query(query + telephoneSQLBody).then((dbResponce) => {
@@ -110,24 +122,29 @@ class SearchManager {
         FROM notebook2.person WHERE`
 
       let personSQLBody = ""
-      if (!!personData.name.trim())
+      if (!!personData.name.trim()){
+        personData.name = SearchManager.handleSearchString(personData.name)
         personSQLBody += ` LOWER(name) LIKE LOWER('${personData.name}')`
+      }
 
       if (!!personData.lastname.trim()) {
         if (personSQLBody.length !== 0) personSQLBody += ` AND `
 
+        personData.lastname = SearchManager.handleSearchString(personData.lastname)
         personSQLBody += ` LOWER(lastname) LIKE LOWER('${personData.lastname}')`
       }
 
       if (!!personData.midname.trim()) {
         if (personSQLBody.length !== 0) personSQLBody += ` AND `
 
+        personData.midname = SearchManager.handleSearchString(personData.midname)
         personSQLBody += ` LOWER(midname) LIKE LOWER('${personData.midname}')`
       }
 
       if (!!personData.alias.trim()) {
         if (personSQLBody.length !== 0) personSQLBody += ` AND `
 
+        personData.alias = SearchManager.handleSearchString(personData.alias)
         personSQLBody += ` LOWER(alias) LIKE LOWER('${personData.alias}')`
       }
 
@@ -153,42 +170,50 @@ class SearchManager {
         FROM notebook2.event WHERE`
 
       let eventSQLBody = ""
-      if (!!event.category.trim())
-        eventSQLBody += ` LOWER(category) LIKE LOWER('${event.category}')`
+      if (!!event.category.trim()) {
 
+        event.category = SearchManager.handleSearchString(event.category)
+        eventSQLBody += ` LOWER(category) LIKE LOWER('${event.category}')`
+      }
       if (!!event.detention_by.trim()) {
         if (eventSQLBody.length !== 0) eventSQLBody += ` AND `
 
+        event.detention_by = SearchManager.handleSearchString(event.detention_by)
         eventSQLBody += ` LOWER(detention_by) LIKE LOWER('${event.detention_by}')`
       }
 
       if (!!event.detention_date.trim()) {
         if (eventSQLBody.length !== 0) eventSQLBody += ` AND `
 
+        event.detention_date = SearchManager.handleSearchString(event.detention_date)
         eventSQLBody += ` LOWER(detention_date) LIKE LOWER('${event.detention_date}')`
       }
 
       if (!!event.detention_reason.trim()) {
         if (eventSQLBody.length !== 0) eventSQLBody += ` AND `
 
+        event.detention_reason = SearchManager.handleSearchString(event.detention_reason)
         eventSQLBody += ` LOWER(detention_reason) LIKE LOWER('${event.detention_reason}')`
       }
 
       if (!!event.detention_time.trim()) {
         if (eventSQLBody.length !== 0) eventSQLBody += ` AND `
 
-        eventSQLBody += ` LOWER(detention_reason) LIKE LOWER('${event.detention_time}')`
+        event.detention_reason = SearchManager.handleSearchString(event.detention_reason)
+        eventSQLBody += ` LOWER(detention_reason) LIKE LOWER('${event.detention_reason}')`
       }
 
       if (!!event.keeping_place.trim()) {
         if (eventSQLBody.length !== 0) eventSQLBody += ` AND `
 
+        event.keeping_place = SearchManager.handleSearchString(event.keeping_place)
         eventSQLBody += ` LOWER(keeping_place) LIKE LOWER('${event.keeping_place}')`
       }
 
       if (!!event.additional.trim()) {
         if (eventSQLBody.length !== 0) eventSQLBody += ` AND `
 
+        event.additional = SearchManager.handleSearchString(event.additional)
         eventSQLBody += ` LOWER(additional) LIKE LOWER('${event.additional}')`
       }
 
