@@ -21,8 +21,8 @@ const express = require("express")
 
 const app = express()
 const router = express.Router()
-const port = 3000
-const allowedOrigins = ["http://localhost:4200", "http://localhost:3000"]
+const port = 3003
+const allowedOrigins = ["http://localhost:4200", "http://localhost:3000", "http://localhost:3003"]
 
 app.use(
   cors({

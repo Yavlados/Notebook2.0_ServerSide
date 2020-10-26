@@ -104,6 +104,7 @@ class CryptoManager {
     return new Promise((resolve, reject) => {
       switch (requestFromClient) {
         case statusCode.keyIsUpdated:
+          resolve(true)
           break
         case statusCode.updateKey:
           this.generateKey(client).then((uuid) => resolve({ uuid }))
