@@ -114,21 +114,29 @@ class CryptoManager {
   }
 
   importManager(data, client) {
+    const afterPreparingImport = (data, password, resolve) => {
+      if (!!password.trim())
+        resolve({
+          data: this.encode(data, password),
+          isSecured: true,
+        })
+      else
+        resolve({
+          data: this.encode(data, this.defaultPassword),
+          isSecured: false,
+        })
+    }
+
     return new Promise((resolve, reject) => {
       const { onImport, password } = data
+      const afterPreparingWithPassword = (data) =>
+        afterPreparingImport(data, password, resolve)
       if (typeof onImport === "string" && onImport === "ALL") {
-        this.prepareImportAll(client).then((data) => {
-          if (!!password.trim())
-            resolve({
-              data: this.encode(data, password),
-              isSecured: true,
-            })
-          else
-            resolve({
-              data: this.encode(data, this.defaultPassword),
-              isSecured: false,
-            })
-        })
+        this.prepareImportAll(client).then(afterPreparingWithPassword)
+      } else if (Array.isArray(onImport)) {
+        this.prepareImportData(client, onImport).then(
+          afterPreparingWithPassword
+        )
       }
     })
   }
@@ -202,7 +210,42 @@ class CryptoManager {
     })
   }
 
-  prepareImportData(eventIds) {}
+  prepareImportData(client, eventIds) {
+    return new Promise((resolve, reject) => {
+      const eventPrms = eventIds.map((event_id) => {
+        return new Promise((resEv, rejEv) => {
+          EventGetters.getById(client, event_id).then((eventResponce) => {
+            let event = eventResponce.rows[0]
+            PersonGetters.getEventPersons(client, event.id).then(
+              (personResponce) => {
+                let persons = personResponce.rows
+                event.persons = persons
+                const personPrms = persons.map((_, persind) => {
+                  return new Promise((resPers, rejPers) => {
+                    persons[persind].telephones = []
+                    TelephoneGetters.getPersonTelephones(
+                      client,
+                      persons[persind].id
+                    ).then((telephones) => {
+                      persons[persind].telephones = telephones
+                      resPers(persons[persind])
+                    })
+                  })
+                })
+                Promise.all(personPrms).then((persons) => {
+                  event.persons = persons
+                  resEv(event)
+                })
+              }
+            )
+          })
+        })
+      })
+      Promise.all(eventPrms).then((events) => {
+        resolve(events)
+      })
+    })
+  }
 }
 
 module.exports = {
