@@ -47,7 +47,8 @@ app.use(
 )
 
 app.use(express.static(path.resolve(__dirname, "node_modules")))
-app.use(express.static(path.resolve(__dirname, "dist", "AngularApp")))
+app.use(express.static(path.resolve(__dirname, "dist", "ClientSide")))
+// app.use(express.static(path.resolve(__dirname, "dist", "AngularApp")))
 
 let connectionManager
 let cryptoManager
@@ -233,7 +234,8 @@ app.use("/api", function (error, req, res, next) {
 })
 
 app.get("/*", (req, res) => {
-  res.sendFile(path.resolve(__dirname, "dist", "AngularApp", "index.html"))
+  res.sendFile(path.resolve(__dirname, "dist", "ClientSide", "index.html"))
+  // res.sendFile(path.resolve(__dirname, "dist", "AngularApp", "index.html"))
 })
 
 // app.use(router)
